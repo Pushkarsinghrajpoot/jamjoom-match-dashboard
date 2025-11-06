@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { loadExcelFromPath } from '@/utils/fileParser';
+import { loadExcelFromPath, ItemMasterRow, GenConsumableRow } from '@/utils/fileParser';
 import { matchDescriptionsAsync, MatchResult } from '@/utils/matcher';
 
 export default function MatchDashboard() {
-  const [itemMasterData, setItemMasterData] = useState<any[]>([]);
-  const [genConsumableData, setGenConsumableData] = useState<any[]>([]);
+  const [itemMasterData, setItemMasterData] = useState<ItemMasterRow[]>([]);
+  const [genConsumableData, setGenConsumableData] = useState<GenConsumableRow[]>([]);
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -22,8 +22,8 @@ export default function MatchDashboard() {
       setProgress(0);
       try {
         const [itemData, genData] = await Promise.all([
-          loadExcelFromPath('/item-master.xlsx'),
-          loadExcelFromPath('/gen-consumables.xlsx')
+          loadExcelFromPath<ItemMasterRow>('/item-master.xlsx'),
+          loadExcelFromPath<GenConsumableRow>('/gen-consumables.xlsx')
         ]);
         
         setItemMasterData(itemData);
@@ -52,7 +52,7 @@ export default function MatchDashboard() {
     };
 
     loadFiles();
-  }, []);
+  }, [minThreshold]);
 
   // Re-match when threshold changes
   const handleThresholdChange = async (newThreshold: number) => {

@@ -21,7 +21,7 @@ export interface GenConsumableRow {
   'INITIAL QUANTITY': string | number;
 }
 
-export const parseExcelFile = async (file: File): Promise<any[]> => {
+export const parseExcelFile = async (file: File): Promise<ItemMasterRow[] | GenConsumableRow[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -31,7 +31,7 @@ export const parseExcelFile = async (file: File): Promise<any[]> => {
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        const jsonData = XLSX.utils.sheet_to_json(worksheet) as ItemMasterRow[] | GenConsumableRow[];
         resolve(jsonData);
       } catch (error) {
         reject(error);
@@ -43,14 +43,14 @@ export const parseExcelFile = async (file: File): Promise<any[]> => {
   });
 };
 
-export const loadExcelFromPath = async (path: string): Promise<any[]> => {
+export const loadExcelFromPath = async <T extends ItemMasterRow | GenConsumableRow>(path: string): Promise<T[]> => {
   try {
     const response = await fetch(path);
     const arrayBuffer = await response.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    const jsonData = XLSX.utils.sheet_to_json(worksheet) as T[];
     return jsonData;
   } catch (error) {
     console.error('Error loading Excel file:', error);
@@ -58,7 +58,7 @@ export const loadExcelFromPath = async (path: string): Promise<any[]> => {
   }
 };
 
-export const loadCSVFromPath = async (path: string): Promise<any[]> => {
+export const loadCSVFromPath = async <T extends ItemMasterRow | GenConsumableRow>(path: string): Promise<T[]> => {
   try {
     const response = await fetch(path);
     const text = await response.text();
@@ -73,7 +73,7 @@ export const loadCSVFromPath = async (path: string): Promise<any[]> => {
         transform: (value: string) => value.trim(),
         complete: (results) => {
           console.log(`Parsed ${results.data.length} rows from ${path}`);
-          resolve(results.data as any[]);
+          resolve(results.data as T[]);
         },
         error: (error: Error) => {
           console.error('Papa Parse error:', error);

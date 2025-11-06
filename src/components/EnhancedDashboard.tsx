@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { loadCSVFromPath } from '@/utils/fileParser';
+import { loadCSVFromPath, ItemMasterRow, GenConsumableRow } from '@/utils/fileParser';
 import { matchDescriptionsAsync, MatchResult } from '@/utils/matcher';
 
 export default function EnhancedDashboard() {
-  const [itemMasterData, setItemMasterData] = useState<any[]>([]);
-  const [genConsumableData, setGenConsumableData] = useState<any[]>([]);
+  const [itemMasterData, setItemMasterData] = useState<ItemMasterRow[]>([]);
+  const [genConsumableData, setGenConsumableData] = useState<GenConsumableRow[]>([]);
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -25,8 +25,8 @@ export default function EnhancedDashboard() {
       setProgress(0);
       try {
         const [itemData, genData] = await Promise.all([
-          loadCSVFromPath('/Item Master - List of MFG & Trading Items.csv'),
-          loadCSVFromPath('/NPT0001-24-GEN-CONSUMABLES-NURSING-AND-WOUND-CARE-TENDER-ITEMS-LIST.csv')
+          loadCSVFromPath<ItemMasterRow>('/Item Master - List of MFG & Trading Items.csv'),
+          loadCSVFromPath<GenConsumableRow>('/NPT0001-24-GEN-CONSUMABLES-NURSING-AND-WOUND-CARE-TENDER-ITEMS-LIST.csv')
         ]);
         
         console.log('Item Master data loaded:', itemData.length, 'rows');
@@ -60,7 +60,7 @@ export default function EnhancedDashboard() {
     };
 
     loadFiles();
-  }, []);
+  }, [minThreshold]);
 
   // Re-match when threshold changes
   const handleThresholdChange = async (newThreshold: number) => {
@@ -239,7 +239,7 @@ export default function EnhancedDashboard() {
               <p className="font-semibold text-gray-900">⚡ Optimized for Speed</p>
               <p className="text-gray-700 mt-1">
                 Initial threshold set to <span className="font-bold text-blue-600">70%</span> for faster loading. 
-                Lower the threshold and click "Re-Analyze" to find more matches.
+                Lower the threshold and click &quot;Re-Analyze&quot; to find more matches.
               </p>
             </div>
           </div>
@@ -395,7 +395,7 @@ export default function EnhancedDashboard() {
               <label className="block text-sm font-medium text-gray-700 mb-2">🎯 Quality Filter</label>
               <select
                 value={filterQuality}
-                onChange={(e) => setFilterQuality(e.target.value as any)}
+                onChange={(e) => setFilterQuality(e.target.value as 'all' | 'excellent' | 'good' | 'fair' | 'poor')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Matches</option>

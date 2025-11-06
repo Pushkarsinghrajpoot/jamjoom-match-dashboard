@@ -1,8 +1,9 @@
 import { compareTwoStrings } from 'string-similarity';
+import { ItemMasterRow, GenConsumableRow } from './fileParser';
 
 export interface MatchResult {
-  itemMasterRow: any;
-  genConsumableRow: any;
+  itemMasterRow: ItemMasterRow;
+  genConsumableRow: GenConsumableRow;
   matchPercentage: number;
   itemMasterDescription: string;
   genConsumableDescription: string;
@@ -38,8 +39,8 @@ export const calculateSimilarity = (desc1: string, desc2: string): number => {
  * Optimized with early exit and result limiting
  */
 export const matchDescriptions = (
-  itemMasterData: any[],
-  genConsumableData: any[],
+  itemMasterData: ItemMasterRow[],
+  genConsumableData: GenConsumableRow[],
   minThreshold: number = 0,
   maxResults: number = 1000
 ): MatchResult[] => {
@@ -105,8 +106,8 @@ const calculateTokenOverlap = (tokens1: Set<string>, tokens2: Set<string>): numb
  * Reduces 14M+ comparisons to only relevant candidates
  */
 export const matchDescriptionsAsync = async (
-  itemMasterData: any[],
-  genConsumableData: any[],
+  itemMasterData: ItemMasterRow[],
+  genConsumableData: GenConsumableRow[],
   minThreshold: number = 0,
   maxResults: number = 1000,
   onProgress?: (progress: number) => void
