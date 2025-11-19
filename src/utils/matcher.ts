@@ -1,12 +1,21 @@
 import { compareTwoStrings } from 'string-similarity';
 import { ItemMasterRow, GenConsumableRow } from './fileParser';
 
+export interface DescriptionDifference {
+  commonWords: string[];
+  onlyInItemMaster: string[];
+  onlyInGenConsumable: string[];
+  itemMasterWordCount: number;
+  genConsumableWordCount: number;
+}
+
 export interface MatchResult {
   itemMasterRow: ItemMasterRow;
   genConsumableRow: GenConsumableRow;
   matchPercentage: number;
   itemMasterDescription: string;
   genConsumableDescription: string;
+  differences: DescriptionDifference;
 }
 
 /**
@@ -19,6 +28,51 @@ const normalizeString = (str: string): string => {
     .trim()
     .replace(/\s+/g, ' ')
     .replace(/[^\w\s]/g, '');
+};
+
+/**
+ * Normalize string for difference display (preserves hyphens and numbers)
+ */
+const normalizeForDisplay = (str: string): string => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s-]/g, ''); // Keep hyphens for display
+};
+
+/**
+ * Calculate differences between two descriptions
+ */
+export const calculateDifferences = (desc1: string, desc2: string): DescriptionDifference => {
+  // Use less aggressive normalization for display
+  const display1 = normalizeForDisplay(desc1);
+  const display2 = normalizeForDisplay(desc2);
+  
+  // Split into words and filter meaningful tokens (>= 2 chars)
+  const words1 = display1.split(/\s+/).filter(w => w.length >= 2);
+  const words2 = display2.split(/\s+/).filter(w => w.length >= 2);
+  
+  const set1 = new Set(words1);
+  const set2 = new Set(words2);
+  
+  // Find common words
+  const commonWords = Array.from(set1).filter(word => set2.has(word));
+  
+  // Find words only in first description
+  const onlyInItemMaster = Array.from(set1).filter(word => !set2.has(word));
+  
+  // Find words only in second description
+  const onlyInGenConsumable = Array.from(set2).filter(word => !set1.has(word));
+  
+  return {
+    commonWords: commonWords.sort(),
+    onlyInItemMaster: onlyInItemMaster.sort(),
+    onlyInGenConsumable: onlyInGenConsumable.sort(),
+    itemMasterWordCount: words1.length,
+    genConsumableWordCount: words2.length,
+  };
 };
 
 /**
@@ -60,12 +114,14 @@ export const matchDescriptions = (
       const matchPercentage = calculateSimilarity(itemDesc, genDesc);
       
       if (matchPercentage >= minThreshold) {
+        const differences = calculateDifferences(itemDesc, genDesc);
         matches.push({
           itemMasterRow: itemRow,
           genConsumableRow: genRow,
           matchPercentage,
           itemMasterDescription: itemDesc,
           genConsumableDescription: genDesc,
+          differences,
         });
       }
     }
@@ -177,12 +233,14 @@ export const matchDescriptionsAsync = async (
           const matchPercentage = compareTwoStrings(itemData.normalizedDesc, genData.normalizedDesc) * 100;
           
           if (matchPercentage >= minThreshold) {
+            const differences = calculateDifferences(itemData.desc, genData.desc);
             matches.push({
               itemMasterRow: itemData.row,
               genConsumableRow: genData.row,
               matchPercentage: Math.round(matchPercentage * 100) / 100,
               itemMasterDescription: itemData.desc,
               genConsumableDescription: genData.desc,
+              differences,
             });
             
             // OPTIMIZATION 3: Early exit on perfect match

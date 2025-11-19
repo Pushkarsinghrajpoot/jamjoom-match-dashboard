@@ -120,7 +120,21 @@ export default function EnhancedDashboard() {
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Match %', 'Item Code', 'Item Description', 'Item UOM', 'NUPCO Code', 'Gen Description', 'Gen UOM'];
+    const headers = [
+      'Match %', 
+      'Item Code', 
+      'Item Description', 
+      'Item UOM', 
+      'NUPCO Code', 
+      'Gen Description', 
+      'Gen UOM',
+      'Common Words Count',
+      'Common Words',
+      'Only in Item Master Count',
+      'Only in Item Master',
+      'Only in Gen Consumable Count',
+      'Only in Gen Consumable'
+    ];
     const rows = filteredMatches.map(m => [
       m.matchPercentage,
       m.itemMasterRow['Item Code'] || '',
@@ -128,7 +142,13 @@ export default function EnhancedDashboard() {
       m.itemMasterRow['UOM'] || '',
       m.genConsumableRow['NUPCO CODE'] || '',
       m.genConsumableDescription.replace(/,/g, ';'),
-      m.genConsumableRow['UOM'] || ''
+      m.genConsumableRow['UOM'] || '',
+      m.differences.commonWords.length,
+      m.differences.commonWords.join(' | '),
+      m.differences.onlyInItemMaster.length,
+      m.differences.onlyInItemMaster.join(' | '),
+      m.differences.onlyInGenConsumable.length,
+      m.differences.onlyInGenConsumable.join(' | ')
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -551,6 +571,90 @@ export default function EnhancedDashboard() {
                             <span className="font-medium text-gray-700">Initial Quantity:</span>
                             <span className="ml-2 text-gray-900">{match.genConsumableRow['INITIAL QUANTITY']}</span>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Differences Section */}
+                    <div className="mt-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 border-2 border-amber-200">
+                      <h3 className="font-semibold text-amber-900 mb-3 flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                        </svg>
+                        Description Differences Analysis
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        {/* Common Words */}
+                        <div className="bg-white rounded-lg p-3 border border-green-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">✅</span>
+                            <span className="font-semibold text-green-700">Common Words ({match.differences.commonWords.length})</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                            {match.differences.commonWords.length > 0 ? (
+                              match.differences.commonWords.map((word, idx) => (
+                                <span key={idx} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">
+                                  {word}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-500 text-xs italic">No common words</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Only in Item Master */}
+                        <div className="bg-white rounded-lg p-3 border border-blue-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">➕</span>
+                            <span className="font-semibold text-blue-700">Only in Item Master ({match.differences.onlyInItemMaster.length})</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                            {match.differences.onlyInItemMaster.length > 0 ? (
+                              match.differences.onlyInItemMaster.map((word, idx) => (
+                                <span key={idx} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium">
+                                  {word}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-500 text-xs italic">No unique words</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Only in Gen Consumables */}
+                        <div className="bg-white rounded-lg p-3 border border-purple-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">➖</span>
+                            <span className="font-semibold text-purple-700">Only in Gen Consumables ({match.differences.onlyInGenConsumable.length})</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                            {match.differences.onlyInGenConsumable.length > 0 ? (
+                              match.differences.onlyInGenConsumable.map((word, idx) => (
+                                <span key={idx} className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs font-medium">
+                                  {word}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-500 text-xs italic">No unique words</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Summary Stats */}
+                      <div className="mt-3 pt-3 border-t border-amber-200 flex flex-wrap gap-4 text-xs text-gray-600">
+                        <div>
+                          <span className="font-medium">Item Master Words:</span> {match.differences.itemMasterWordCount}
+                        </div>
+                        <div>
+                          <span className="font-medium">Gen Consumable Words:</span> {match.differences.genConsumableWordCount}
+                        </div>
+                        <div>
+                          <span className="font-medium">Match Accuracy:</span> {match.differences.commonWords.length > 0 
+                            ? Math.round((match.differences.commonWords.length / Math.max(match.differences.itemMasterWordCount, match.differences.genConsumableWordCount)) * 100)
+                            : 0}% of words match
                         </div>
                       </div>
                     </div>
