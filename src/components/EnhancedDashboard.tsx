@@ -584,26 +584,7 @@ export default function EnhancedDashboard() {
                         Description Differences Analysis
                       </h3>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                        {/* Common Words */}
-                        <div className="bg-white rounded-lg p-3 border border-green-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">✅</span>
-                            <span className="font-semibold text-green-700">Common Words ({match.differences.commonWords.length})</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
-                            {match.differences.commonWords.length > 0 ? (
-                              match.differences.commonWords.map((word, idx) => (
-                                <span key={idx} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">
-                                  {word}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-gray-500 text-xs italic">No common words</span>
-                            )}
-                          </div>
-                        </div>
-
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         {/* Only in Item Master */}
                         <div className="bg-white rounded-lg p-3 border border-blue-200">
                           <div className="flex items-center gap-2 mb-2">
@@ -645,12 +626,6 @@ export default function EnhancedDashboard() {
 
                       {/* Summary Stats */}
                       <div className="mt-3 pt-3 border-t border-amber-200 flex flex-wrap gap-4 text-xs text-gray-600">
-                        <div>
-                          <span className="font-medium">Item Master Words:</span> {match.differences.itemMasterWordCount}
-                        </div>
-                        <div>
-                          <span className="font-medium">Gen Consumable Words:</span> {match.differences.genConsumableWordCount}
-                        </div>
                         <div>
                           <span className="font-medium">Match Accuracy:</span> {match.differences.commonWords.length > 0 
                             ? Math.round((match.differences.commonWords.length / Math.max(match.differences.itemMasterWordCount, match.differences.genConsumableWordCount)) * 100)
